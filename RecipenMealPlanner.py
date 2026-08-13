@@ -1,0 +1,78 @@
+from datetime import datetime
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, create_engine, func
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
+
+Engine = create_engine("sqlite:///RecipenMealPlanner.db", echo=True)
+
+class Base(DeclarativeBase):
+    pass
+
+class Users(Base):
+    __tablename__ = "Users"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str] = mapped_column(String(50))
+    email: Mapped[str] = mapped_column(String(100), unique=True)
+    password: Mapped[str] = mapped_column(String(25))
+
+
+# PARENT MODEL FOR INSTRUCTION AND THE INGREDIENTS
+class Recipe(Base):
+    __tablename__ = "Recipes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_email: Mapped[str] = mapped_column(String(100), ForeignKey("Users.email"), nullable=False)
+    title: Mapped[str] = mapped_column(String(100), unique=True)
+    description: Mapped[str] = mapped_column(Text, nullable=True) #OPTIONAL
+    cuisine: Mapped[str] = mapped_column(String(50))
+    category: Mapped[str] = mapped_column(String(50))
+    prep_time: Mapped[int] = mapped_column(Integer)
+    cook_time: Mapped[int] = mapped_column(Integer)
+    servings: Mapped[int] = mapped_column(Integer)
+    difficulty: Mapped[str] = mapped_column(String(20))
+    image_path: Mapped[str] = mapped_column(Text, nullable=True) #OPTIONAL
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, onupdate=func.now(), server_default=func.now())
+
+    #  ---------- ONE TO MANY RELATION ---------
+    # Lookup for ingredients
+    # It doesn't create a new column, it lets the table interact with the each other as object models
+    # e.g. if a new ingredient is added to the Ingredient table, it will automatically assing it with the recipe's ID
+    ingredients: Mapped[list["Ingredient"]] = relationship(back_populates="recipe", cascade="all, delete-orphan")
+    
+    # Lookup for instructions (steps)
+    instructions: Mapped[list["Instruction"]] = relationship(back_populates="recipe", cascade="all, delete-orphan")
+
+class Ingredient(Base):
+    __tablename__ = "Ingredients"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    recipe_id: Mapped[int] = mapped_column(ForeignKey("Recipes.id"), nullable=False)
+    name: Mapped[str] = mapped_column(String(200))
+    quantity: Mapped[float] = mapped_column(Float)
+    unit: Mapped[str] = mapped_column(String(50))
+    # To estabish the interaction with the Recipe table
+    recipe: Mapped["Recipe"] = relationship(back_populates="ingredients")
+
+class Instruction(Base):
+    __tablename__ = "Instructions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    recipe_id: Mapped[int] = mapped_column(ForeignKey("Recipes.id"), nullable=False)
+    stepNumber: Mapped[int] = mapped_column(Integer, nullable=False)
+    description: Mapped[str] = mapped_column(Text)
+
+    # To estabish the interaction with the Recipe table
+    # Many-to-one relationship back to Recipe
+    recipe: Mapped["Recipe"] = relationship(back_populates="instructions")
+
+
+
+# creating the database tables
+Base.metadata.create_all(Engine)
+
+with Session(Engine) as session:
+
+    read_users = session.query(Users).all()
+    for user in read_users:
+        print(user)
