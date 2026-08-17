@@ -21,7 +21,7 @@ class Recipe(Base):
     __tablename__ = "Recipes"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_email: Mapped[str] = mapped_column(String(100), ForeignKey("Users.email"), nullable=False)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("Users.id"), nullable=False)
     title: Mapped[str] = mapped_column(String(100), unique=True)
     description: Mapped[str] = mapped_column(Text, nullable=True) #OPTIONAL
     cuisine: Mapped[str] = mapped_column(String(50))
