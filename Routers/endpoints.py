@@ -3,7 +3,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import EmailStr
 from RecipenMealPlanner import Engine
 from sqlalchemy.orm import Session, sessionmaker
-from Curd.services import Login, Register, createRecipe, deleteRecipe, getEmail, getRecipeDetails, getRecipes
+from Curd.services import Login, Register, createRecipe, deleteRecipe, getRecipeDetails, getRecipes, getUserID
 import jwt
 from Routers.pydanticModels import LoginSchema, RecipeCreateSchema, RegistratoinSchema
 
@@ -23,9 +23,9 @@ def get_db():
 
 security = HTTPBearer()
 
-def get_user_email(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str:
+def get_user_id(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str:
     # 
-    return getEmail(credentials)
+    return getUserID(credentials)
 
 
 @router.post("/register")
@@ -39,21 +39,21 @@ def login(credentials: LoginSchema, db: Session = Depends(get_db) ):
     return Login(credentials, db)
 
 @router.post("/recipes")
-def create_recipe(recipe_data: RecipeCreateSchema, user_email: EmailStr = Depends(get_user_email), db: Session = Depends(get_db)):
+def create_recipe(recipe_data: RecipeCreateSchema, user_id: int = Depends(get_user_id), db: Session = Depends(get_db)):
     # 
-    return createRecipe(recipe_data, user_email, db)
+    return createRecipe(recipe_data, user_id, db)
 
 @router.get("/recipes")
-def get_recipes(user_email: str = Depends(get_user_email), db : Session = Depends(get_db)):
+def get_recipes(user_id: str = Depends(get_user_id), db : Session = Depends(get_db)):
     # 
-    return getRecipes(user_email, db)
+    return getRecipes(user_id, db)
 
 @router.get("/recipes/{recipe_id}")
-def get_recipe_details(recipe_id: int, user_email: EmailStr = Depends(get_user_email), db: Session = Depends(get_db)):
+def get_recipe_details(recipe_id: int, user_id: int = Depends(get_user_id), db: Session = Depends(get_db)):
     # 
-    return getRecipeDetails(recipe_id, user_email ,db)
+    return getRecipeDetails(recipe_id, user_id ,db)
 
 @router.delete("/recipes/{recipe_id}")
-def delete_recipe(recipe_id: int, user_email: EmailStr = Depends(get_user_email), db: Session = Depends(get_db)):
+def delete_recipe(recipe_id: int, user_id: int = Depends(get_user_id), db: Session = Depends(get_db)):
     # 
-    return deleteRecipe(recipe_id, user_email, db)
+    return deleteRecipe(recipe_id, user_id, db)
