@@ -12,7 +12,7 @@ def getUserID(credentials):
     token = credentials.credentials
     try:
         payload = jwt.decode(token, JWT_SECRET, JWT_ALGORITHM)
-        user_id: str= payload.get("user_id")
+        user_id = payload.get("id")
         if user_id is None:
             raise HTTPException(status_code=403, detail="Invalid token payload")
         return user_id
@@ -53,7 +53,6 @@ def Login(login_data, db):
 
     jwt_claims = {
         "username": user.username,
-        "email": user.email,
         "id": user.id,
         "exp": token_expiration
     }
@@ -66,7 +65,6 @@ def Login(login_data, db):
         "token_type": "bearer",
         "user": {
             "name": user.username,
-            "email": user.email,
             "id": user.id
         }
     }

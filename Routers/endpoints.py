@@ -44,7 +44,7 @@ def create_recipe(recipe_data: RecipeCreateSchema, user_id: int = Depends(get_us
     return createRecipe(recipe_data, user_id, db)
 
 @router.get("/recipes")
-def get_recipes(user_id: str = Depends(get_user_id), db : Session = Depends(get_db)):
+def get_recipes(user_id: int = Depends(get_user_id), db : Session = Depends(get_db)):
     # 
     return getRecipes(user_id, db)
 
