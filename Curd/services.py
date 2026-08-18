@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta
+import json
+import os
 
 from fastapi import HTTPException, security
 from RecipenMealPlanner import Ingredient, Instruction, Recipe, Users
@@ -69,44 +71,77 @@ def Login(login_data, db):
         }
     }
 
-def createRecipe(recipe_data, user_id, db):
+
+
+# Directory where images are stored
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
+async def createRecipe(title, description, cuisine, category, prep_time,
+    cook_time, servings, difficulty, ingredients, instructions, image_path, user_id, db):
     # validating the title name
-    existing_recipe_title = db.query(Recipe).filter(Recipe.user_id == user_id, Recipe.title == recipe_data.title).first()
+    existing_recipe_title = db.query(Recipe).filter(Recipe.user_id == user_id, Recipe.title == title).first()
     if existing_recipe_title:
             raise HTTPException(status_code=400, detail="This recipe title already exists!")
+
+    # Paresing the ingredients and instruction fields
+    parse_ingredients = json.loads(ingredients)
+    parse_instructions = json.loads(instructions)
 
     # if the title doesn't exist, create the task
     new_recipe = Recipe(
         user_id = user_id,
-        title = recipe_data.title,
-        description = recipe_data.description,
-        cuisine=recipe_data.cuisine,
-        category=recipe_data.category,
-        prep_time=recipe_data.prep_time,
-        cook_time=recipe_data.cook_time,
-        servings=recipe_data.servings,
-        difficulty=recipe_data.difficulty,
-        image_path=recipe_data.image_path
+        title = title,
+        description = description,
+        cuisine= cuisine,
+        category=category,
+        prep_time=prep_time,
+        cook_time=cook_time,
+        servings=servings,
+        difficulty=difficulty,
+        image_path= None,
     )
 
-    for ing in recipe_data.ingredients:
+    for ing in parse_ingredients:
         recipe_ingredients = Ingredient(
-            name = ing.name,
-            quantity = ing.quantity,
-            unit= ing.unit
+            name = ing.get("name"),
+            quantity = ing.get("quantity"),
+            unit= ing.get("unit"),
         )
         new_recipe.ingredients.append(recipe_ingredients)
 
-    for inst in recipe_data.instructions:
+    for inst in parse_instructions:
         recipe_instructions = Instruction(
-            stepNumber = inst.stepNumber,
-            description = inst.description
+            stepNumber = inst.get("stepNumber"),
+            description = inst.get("description")
         )
         new_recipe.instructions.append(recipe_instructions)
 
     db.add(new_recipe)
     db.commit()
     db.refresh(new_recipe)
+
+    if image_path and image_path.filename:
+        print(f"--- IMAGE RECEIVED: {image_path.filename} ---")
+        try: 
+            file_name = new_recipe.id
+            file_extension = os.path.splitext(image_path.filename)[1]
+            new_filename = f"{file_name}{file_extension}"
+            file_location = os.path.join(UPLOAD_DIR, new_filename)
+
+            # Save file to disk
+            with open(file_location, "wb+") as file_object:
+                file_object.write(await image_path.read())
+
+            # Update database record with the final file path/name
+            new_recipe.image_path = f"/{UPLOAD_DIR}/{new_filename}"
+            db.commit()
+            print(f"--- IMAGE SAVED SUCCESSFULLY TO: {file_location} ---")
+        except Exception as e:
+            print(f"--- ERROR SAVING IMAGE: {str(e)} ---")
+    else:
+        print("--- NO IMAGE OR EMPTY FILENAME RECEIVED ---")
 
     return {
         "message": "Recipe created successfully!",

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, Form, UploadFile
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import EmailStr
 from RecipenMealPlanner import Engine
@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from Curd.services import Login, Register, createRecipe, deleteRecipe, getRecipeDetails, getRecipes, getUserID
 import jwt
 from Routers.pydanticModels import LoginSchema, RecipeCreateSchema, RegistratoinSchema
+import os
 
 # creating the router instance
 router = APIRouter(
@@ -39,9 +40,21 @@ def login(credentials: LoginSchema, db: Session = Depends(get_db) ):
     return Login(credentials, db)
 
 @router.post("/recipes")
-def create_recipe(recipe_data: RecipeCreateSchema, user_id: int = Depends(get_user_id), db: Session = Depends(get_db)):
+async def create_recipe(title: str = Form(...),
+    description: str = Form(None),  # Optional field
+    cuisine: str = Form(...),
+    category: str = Form(...),
+    prep_time: int = Form(...),
+    cook_time: int = Form(...),
+    servings: int = Form(...),
+    difficulty: str = Form(...),
+    ingredients: str = Form(...),  # Received as a JSON string from frontend
+    instructions: str = Form(...),  # Received as a JSON string from frontend
+    image_path: UploadFile = File(None), 
+    user_id: int = Depends(get_user_id), db: Session = Depends(get_db)):
     # 
-    return createRecipe(recipe_data, user_id, db)
+    return await createRecipe(title, description, cuisine, category, prep_time,
+    cook_time, servings, difficulty, ingredients, instructions, image_path, user_id, db)
 
 @router.get("/recipes")
 def get_recipes(user_id: int = Depends(get_user_id), db : Session = Depends(get_db)):
