@@ -182,3 +182,72 @@ def deleteRecipe(recipe_id, user_id, db):
         "recipe_id": recipe_id,
         "message": "Recipe deleted successfully!"
     }
+
+async def updateRecipe(recipe_id, title, description, cuisine, category, prep_time,
+    cook_time, servings, difficulty, ingredients, instructions, image_path, user_id, db):
+    # validating the recipe existence
+    existing_recipe = db.query(Recipe).filter(Recipe.user_id == user_id, Recipe.id == recipe_id).first()
+    if not existing_recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found x_x!")
+
+    # # Paresing the ingredients and instruction fields
+    parse_ingredients = json.loads(ingredients)
+    parse_instructions = json.loads(instructions)
+
+    # # if the title doesn't exist, create the task
+    existing_recipe.user_id = user_id
+    existing_recipe.title = title
+    existing_recipe.description = description
+    existing_recipe.cuisine= cuisine
+    existing_recipe.category=category
+    existing_recipe.prep_time=prep_time
+    existing_recipe.cook_time=cook_time
+    existing_recipe.servings=servings
+    existing_recipe.difficulty=difficulty
+
+    existing_recipe.ingredients.clear()
+    existing_recipe.instructions.clear()
+
+    for ing in parse_ingredients:
+        recipe_ingredients = Ingredient(
+            name = ing.get("name"),
+            quantity = ing.get("quantity"),
+            unit= ing.get("unit"),
+        )
+        existing_recipe.ingredients.append(recipe_ingredients)
+
+    for inst in parse_instructions:
+        recipe_instructions = Instruction(
+            stepNumber = inst.get("stepNumber"),
+            description = inst.get("description")
+        )
+        existing_recipe.instructions.append(recipe_instructions)
+
+    db.commit()
+    db.refresh(existing_recipe)
+
+    if image_path is not None and image_path.filename:
+        print(f"--- IMAGE RECEIVED: {image_path.filename} ---")
+        try: 
+            file_name = existing_recipe.id
+            file_extension = os.path.splitext(image_path.filename)[1]
+            new_filename = f"{file_name}{file_extension}"
+            file_location = os.path.join(UPLOAD_DIR, new_filename)
+
+            # Save file to disk
+            with open(file_location, "wb+") as file_object:
+                file_object.write(await image_path.read())
+
+            # Update database record with the final file path/name
+            existing_recipe.image_path = f"/{UPLOAD_DIR}/{new_filename}"
+            db.commit()
+            print(f"--- IMAGE SAVED SUCCESSFULLY TO: {file_location} ---")
+        except Exception as e:
+            print(f"--- ERROR SAVING IMAGE: {str(e)} ---")
+    else:
+        print("--- NO NEW IMAGE RECEIVED ---")
+
+    return {
+        "message": "Recipe updated successfully!",
+        "recipe_id": existing_recipe.id
+    }
