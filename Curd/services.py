@@ -296,3 +296,28 @@ def favoriteRecipe(r_recipe_id, r_user_id ,db):
         db.add(new_favorite)
         db.commit()
         return {"is_favorite": True, "message": "Recipe added to favorites"}
+
+def getFavorites(user_id, db):
+
+    fav_recipes = db.query(Favorite).filter(Favorite.user_id == user_id).all()
+
+    if not fav_recipes:
+        raise HTTPException(status_code=404, detail="Favorite Recipes not found!")
+
+    # Build the list and explicitly tag each as a favorite
+    favorite_recipes = []
+    for fav in fav_recipes:
+        recipe_data = {
+            "id": fav.recipe.id,
+            "title": fav.recipe.title,
+            "description": fav.recipe.description,
+            "category": fav.recipe.category,
+            "cuisine": fav.recipe.cuisine,
+            "is_favorite": True  # Crucial so the heart shows up red!
+        }
+        favorite_recipes.append(recipe_data)
+
+    return{
+        "recipes": favorite_recipes,
+        "message": "Favorite recipes found"
+    }

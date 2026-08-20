@@ -3,7 +3,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import EmailStr
 from RecipenMealPlanner import Engine
 from sqlalchemy.orm import Session, sessionmaker
-from Curd.services import Login, Register, createRecipe, deleteRecipe, favoriteRecipe, getRecipeDetails, getRecipes, getUserID, updateRecipe
+from Curd.services import Login, Register, createRecipe, deleteRecipe, favoriteRecipe, getFavorites, getRecipeDetails, getRecipes, getUserID, updateRecipe
 import jwt
 from Routers.pydanticModels import LoginSchema, RecipeCreateSchema, RegistratoinSchema
 import os
@@ -94,3 +94,8 @@ async def update_recipe( recipe_id: int,
 def favorite_recipe(recipe_id: int, user_id: int = Depends(get_user_id), db: Session = Depends(get_db)):
     # 
     return favoriteRecipe(recipe_id, user_id ,db)
+
+@router.get("/favorites")
+def get_favorite_recipes(user_id: int = Depends(get_user_id), db : Session = Depends(get_db)):
+    # 
+    return getFavorites(user_id, db)
