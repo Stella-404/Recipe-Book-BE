@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, create_engine, func
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint, create_engine, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
 Engine = create_engine("sqlite:///RecipenMealPlanner.db", echo=True)
@@ -66,7 +66,25 @@ class Instruction(Base):
     # Many-to-one relationship back to Recipe
     recipe: Mapped["Recipe"] = relationship(back_populates="instructions")
 
+class Favorite(Base):
+    __tablename__ = "Favorites"
 
+    fav_id: Mapped[int] = mapped_column(primary_key=True)
+    recipe_id: Mapped[int] = mapped_column(ForeignKey("Recipes.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("Users.id", ondelete="CASCADE"), nullable=False)
+
+#     # Ensures a user can't favorite the exact same recipe twice
+#     # it tells the db to enforce the rule that: a combination of recipe_id+user_id is always unique
+    __table_args__ = (
+        UniqueConstraint("user_id", "recipe_id", name="uq_user_recipe"),
+    )
+#     # Optional: Relationships for easy querying
+#     # they are object-oriented bridges created by SQLAlchemy. They link your Favorite model directly 
+#     # to your Recipe and User models.
+#     # when requied, instead of writing JOIN queries you can get the name, title, descript etc of the recipe with 
+#     # just the fav id as; fav.recipe.title etc
+    recipe = relationship("Recipe")
+    user = relationship("User")
 
 # creating the database tables
 Base.metadata.create_all(Engine)
