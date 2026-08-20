@@ -184,7 +184,7 @@ def deleteRecipe(recipe_id, user_id, db):
     }
 
 async def updateRecipe(recipe_id, title, description, cuisine, category, prep_time,
-    cook_time, servings, difficulty, ingredients, instructions, image_path, user_id, db):
+    cook_time, servings, difficulty, ingredients, instructions, image_path, existing_image_path, user_id, db):
     # validating the recipe existence
     existing_recipe = db.query(Recipe).filter(Recipe.user_id == user_id, Recipe.id == recipe_id).first()
     if not existing_recipe:
@@ -246,6 +246,7 @@ async def updateRecipe(recipe_id, title, description, cuisine, category, prep_ti
             print(f"--- ERROR SAVING IMAGE: {str(e)} ---")
     else:
         print("--- NO NEW IMAGE RECEIVED ---")
+        existing_recipe.image_path = existing_image_path
 
     return {
         "message": "Recipe updated successfully!",

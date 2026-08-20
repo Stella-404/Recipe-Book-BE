@@ -84,7 +84,8 @@ async def update_recipe( recipe_id: int,
     ingredients: str = Form(...),
     instructions: str = Form(...),
     image_path: UploadFile = File(None), 
+    existing_image_path: str = Form(None),
     user_id: int = Depends(get_user_id), db: Session = Depends(get_db)):
     # 
     return await updateRecipe(recipe_id, title, description, cuisine, category, prep_time,
-    cook_time, servings, difficulty, ingredients, instructions, image_path, user_id, db)
+    cook_time, servings, difficulty, ingredients, instructions, image_path, existing_image_path, user_id, db)
