@@ -84,7 +84,7 @@ class Favorite(Base):
 #     # when requied, instead of writing JOIN queries you can get the name, title, descript etc of the recipe with 
 #     # just the fav id as; fav.recipe.title etc
     recipe = relationship("Recipe")
-    user = relationship("User")
+    user = relationship("Users")
 
 # creating the database tables
 Base.metadata.create_all(Engine)

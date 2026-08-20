@@ -3,7 +3,7 @@ import json
 import os
 
 from fastapi import HTTPException, security
-from RecipenMealPlanner import Ingredient, Instruction, Recipe, Users
+from RecipenMealPlanner import Favorite, Ingredient, Instruction, Recipe, Users
 import jwt
 
 security = security.HTTPBearer()
@@ -154,8 +154,24 @@ def getRecipes(user_id, db):
     if not existing_recipe:
         raise HTTPException(status_code=404, detail="No recipes found!")
 
+    fav_recipes = db.query(Favorite).filter(Favorite.user_id == user_id).all()
+    fav_ids = {fav.recipe_id for fav in fav_recipes} # Example: {2, 5, 8}
+
+    # Build the response list, tagging each recipe
+    # even I don't know what this is x_x
+    recipe_list = []
+    for recipe in existing_recipe:
+        recipe_list.append({
+            "id": recipe.id,
+            "title": recipe.title,
+            "description": recipe.description,
+            "cuisine": recipe.cuisine,
+            "category": recipe.category,
+            "is_favorite": recipe.id in fav_ids  
+        })
+    
     return{
-        "recipes": existing_recipe,
+        "recipes": recipe_list,
         "message": "These receipes are found"    
     }
 
@@ -252,3 +268,31 @@ async def updateRecipe(recipe_id, title, description, cuisine, category, prep_ti
         "message": "Recipe updated successfully!",
         "recipe_id": existing_recipe.id
     }
+
+def favoriteRecipe(r_recipe_id, r_user_id ,db):
+
+# wondering why it is "r_recipe_id" and "r_user_id"? No specific reason, just had to seperate the incoming data 
+# from frontend, from the column names....... meh
+
+    # CHECK 1: If the recipe xists
+    recipe_exist = db.query(Recipe).filter(Recipe.user_id == r_user_id, Recipe.id == r_recipe_id).first()
+
+    if not recipe_exist:
+        raise HTTPException(status_code=404, detail="Recipe not found!")
+
+    # if recipe exists, then check if it is already marked as fav:
+    favorite = db.query(Favorite).filter(Favorite.recipe_id == r_recipe_id).first()
+    # if already marked as fav
+    if favorite:
+        # remove from favourites
+        db.delete(favorite)
+        db.commit()
+        return {"is_favorite": False, "message": "Removed from favorites"}
+    else:
+        # when not already in their favorite list -- Like Us '_'
+        new_favorite = Favorite(
+            recipe_id = r_recipe_id,
+            user_id = r_user_id)
+        db.add(new_favorite)
+        db.commit()
+        return {"is_favorite": True, "message": "Recipe added to favorites"}
