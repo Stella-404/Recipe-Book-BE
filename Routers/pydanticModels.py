@@ -36,6 +36,7 @@ class RecipeBaseSchema(BaseModel):
     servings: int
     difficulty: str
     image_path: Optional[str]
+    tags_id: Optional[List[int]]
 
 class RecipeCreateSchema(RecipeBaseSchema):
     ingredients: List[IngredientSchema]

@@ -3,7 +3,7 @@ import json
 import os
 
 from fastapi import HTTPException, security
-from RecipenMealPlanner import Favorite, Ingredient, Instruction, Recipe, Users
+from RecipenMealPlanner import Favorite, Ingredient, Instruction, Recipe, Tag, Users
 import jwt
 
 security = security.HTTPBearer()
@@ -79,7 +79,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 async def createRecipe(title, description, cuisine, category, prep_time,
-    cook_time, servings, difficulty, ingredients, instructions, image_path, user_id, db):
+    cook_time, servings, difficulty, tags_id, ingredients, instructions, image_path, user_id, db):
     # validating the title name
     existing_recipe_title = db.query(Recipe).filter(Recipe.user_id == user_id, Recipe.title == title).first()
     if existing_recipe_title:
@@ -117,6 +117,19 @@ async def createRecipe(title, description, cuisine, category, prep_time,
             description = inst.get("description")
         )
         new_recipe.instructions.append(recipe_instructions)
+
+    # === 6. HANDLE TAGS HERE ===
+    if tags_id:
+        try:
+            # Parse the JSON string array (e.g., "[1, 3, 5]") back into a Python list
+            parsed_tag_ids = json.loads(tags_id)
+            if parsed_tag_ids:
+                # Query database for tags whose IDs match the selected list
+                existing_tags = db.query(Tag).filter(Tag.id.in_(parsed_tag_ids)).all()
+                # Attach them to the recipe's many-to-many relationship
+                new_recipe.tags.extend(existing_tags)
+        except Exception as e:
+            print(f"--- ERROR PARSING TAGS: {str(e)} ---")
 
     db.add(new_recipe)
     db.commit()
@@ -321,3 +334,8 @@ def getFavorites(user_id, db):
         "recipes": favorite_recipes,
         "message": "Favorite recipes found"
     }
+
+def getTags(db):
+    tags = db.query(Tag).all()
+
+    return tags
