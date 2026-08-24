@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint, create_engine, func
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, Table, Text, UniqueConstraint, create_engine, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
 Engine = create_engine("sqlite:///RecipenMealPlanner.db", echo=True)
@@ -17,6 +17,15 @@ class Users(Base):
 
 
 # PARENT MODEL FOR INSTRUCTION AND THE INGREDIENTS
+
+# ----------- Junction Table ------
+# recipe_tags = Table(
+#     "recipe_tags",
+#     Base.metadata,
+#     Column("recipe_id", Integer, ForeignKey("recipes.id", ondelete="CASCADE"), primary_key=True),
+#     Column("tag_id", Integer, ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True),
+#     )
+
 class Recipe(Base):
     __tablename__ = "Recipes"
 
@@ -43,6 +52,24 @@ class Recipe(Base):
     # Lookup for instructions (steps)
     instructions: Mapped[list["Instruction"]] = relationship(back_populates="recipe", cascade="all, delete-orphan")
 
+    # ---------- MANY TO MANY RELATIONSHIO ---------
+    tags: Mapped[list["Tag"]] = relationship(secondary="recipe_tags", back_populates="recipe")
+
+class Tag(Base):
+    __tablename__ = "Tags"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(70), unique=True, nullable=False)
+
+    recipe: Mapped[list["Recipe"]] = relationship(secondary="recipe_tags", back_populates="tags")
+
+# ----------- Junction Table ------
+recipe_tags = Table(
+    "recipe_tags",
+    Base.metadata,
+    Column("recipe_id", Integer, ForeignKey("Recipes.id", ondelete="CASCADE"), primary_key=True),
+    Column("tag_id", Integer, ForeignKey("Tags.id", ondelete="CASCADE"), primary_key=True),
+    )
 class Ingredient(Base):
     __tablename__ = "Ingredients"
 
