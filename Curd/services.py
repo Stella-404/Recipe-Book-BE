@@ -174,13 +174,17 @@ def getRecipes(user_id, db):
     # even I don't know what this is x_x
     recipe_list = []
     for recipe in existing_recipe:
+        # Extractig tags for EAC Specific recipe
+        recipe_tags = [{"id": tag.id, "name": tag.name} for tag in recipe.tags]
+
         recipe_list.append({
             "id": recipe.id,
             "title": recipe.title,
             "description": recipe.description,
             "cuisine": recipe.cuisine,
             "category": recipe.category,
-            "is_favorite": recipe.id in fav_ids  
+            "is_favorite": recipe.id in fav_ids,
+            "tags": recipe_tags
         })
     
     return{
@@ -194,10 +198,12 @@ def getRecipeDetails(recipe_id, user_id, db):
         raise HTTPException(status_code=404, detail="Recipe not found!")
     ingredients = recipe.ingredients
     instructions = recipe.instructions
+    tags = recipe.tags
     return{
         "recipe": recipe,
         "ingredients": ingredients,
-        "instructions": instructions
+        "instructions": instructions,
+        "tags": tags
     }
 
 def deleteRecipe(recipe_id, user_id, db):
