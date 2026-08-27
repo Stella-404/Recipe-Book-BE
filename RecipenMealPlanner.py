@@ -55,8 +55,6 @@ class Recipe(Base):
     # ---------- MANY TO MANY RELATIONSHIO ---------
     tags: Mapped[list["Tag"]] = relationship(secondary="recipe_tags", back_populates="recipe")
 
-    # --------- One-to-Many relationship with the meals ---------
-    meals: Mapped["MealPlan"] = relationship(back_populates="recipe", cascade="all, delete-orphan")
 
 class Tag(Base):
     __tablename__ = "Tags"
@@ -124,9 +122,11 @@ class MealPlan(Base):
     week_start_date: Mapped[date] = mapped_column(Date, nullable=False)
     day_of_week: Mapped[int] = mapped_column(Integer, nullable=False)
     meal_slot: Mapped[str] = mapped_column(String(10))
-    recipe_id: Mapped[int] = mapped_column(ForeignKey("Recipes.id"), nullable=False)
+    recipe_id: Mapped[int] = mapped_column(ForeignKey("Recipes.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[int] = mapped_column (ForeignKey("Users.id", ondelete="CASCADE"), nullable=False)
 
-    recipe: Mapped["Recipe"] = relationship(back_populates="meals")
+    recipe = relationship("Recipe")
+    user = relationship("Users")
 
 
 
