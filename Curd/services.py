@@ -3,7 +3,7 @@ import json
 import os
 
 from fastapi import HTTPException, security
-from RecipenMealPlanner import Favorite, Ingredient, Instruction, Recipe, Tag, Users
+from RecipenMealPlanner import Favorite, Ingredient, Instruction, Recipe, Tag, Users, MealPlan
 import jwt
 
 security = security.HTTPBearer()
@@ -345,3 +345,27 @@ def getTags(db):
     tags = db.query(Tag).all()
 
     return tags
+
+def addMealPlan(meal_data, user_id, db):
+    recipe = db.query(Recipe).filter(Recipe.user_id == user_id, Recipe.title == meal_data.recipe_name).first()
+
+    if not recipe:
+        raise HTTPException(status_code=404, detail=f"{meal_data.recipe_name} not found! Please Create it first")
+    
+    recipe_id = recipe.id
+
+    new_meal = MealPlan(
+        week_start_date = meal_data.week_start_date,
+        day_of_week = meal_data.day_of_week,
+        meal_slot = meal_data.meal_slot,
+        recipe_id = recipe_id,
+    )
+
+    db.add(new_meal)
+    db.commit()
+    db.refresh(new_meal)
+    return{
+        "message": "Meal Added Successfully",
+        "meal": new_meal,
+        "meal_id": new_meal.id
+    }

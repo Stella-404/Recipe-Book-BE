@@ -3,9 +3,9 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import EmailStr
 from RecipenMealPlanner import Engine
 from sqlalchemy.orm import Session, sessionmaker
-from Curd.services import Login, Register, createRecipe, deleteRecipe, favoriteRecipe, getFavorites, getRecipeDetails, getRecipes, getTags, getUserID, updateRecipe
+from Curd.services import Login, Register, addMealPlan, createRecipe, deleteRecipe, favoriteRecipe, getFavorites, getRecipeDetails, getRecipes, getTags, getUserID, updateRecipe
 import jwt
-from Routers.pydanticModels import LoginSchema, RecipeCreateSchema, RegistratoinSchema
+from Routers.pydanticModels import LoginSchema, MealPlannerSchema, RecipeCreateSchema, RegistratoinSchema
 import os
 
 # creating the router instance
@@ -105,3 +105,8 @@ def get_favorite_recipes(user_id: int = Depends(get_user_id), db : Session = Dep
 def get_tags(db: Session = Depends(get_db)):
     # 
     return getTags(db)
+
+@router.post("/mealplan")
+def add_meal_plan(meal_data: MealPlannerSchema, user_id: int = Depends(get_user_id), db: Session = Depends(get_db)):
+    #
+    return addMealPlan(meal_data, user_id, db)
