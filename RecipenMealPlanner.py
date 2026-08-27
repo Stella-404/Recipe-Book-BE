@@ -1,5 +1,5 @@
-from datetime import datetime
-from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, Table, Text, UniqueConstraint, create_engine, func
+from datetime import date, datetime
+from sqlalchemy import Column, Date, DateTime, Float, ForeignKey, Integer, String, Table, Text, UniqueConstraint, create_engine, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
 Engine = create_engine("sqlite:///RecipenMealPlanner.db", echo=True)
@@ -55,6 +55,9 @@ class Recipe(Base):
     # ---------- MANY TO MANY RELATIONSHIO ---------
     tags: Mapped[list["Tag"]] = relationship(secondary="recipe_tags", back_populates="recipe")
 
+    # --------- One-to-Many relationship with the meals ---------
+    meals: Mapped["MealPlan"] = relationship(back_populates="recipe", cascade="all, delete-orphan")
+
 class Tag(Base):
     __tablename__ = "Tags"
 
@@ -70,6 +73,7 @@ recipe_tags = Table(
     Column("recipe_id", Integer, ForeignKey("Recipes.id", ondelete="CASCADE"), primary_key=True),
     Column("tag_id", Integer, ForeignKey("Tags.id", ondelete="CASCADE"), primary_key=True),
     )
+
 class Ingredient(Base):
     __tablename__ = "Ingredients"
 
@@ -112,6 +116,19 @@ class Favorite(Base):
 #     # just the fav id as; fav.recipe.title etc
     recipe = relationship("Recipe")
     user = relationship("Users")
+
+class MealPlan(Base):
+    __tablename__ = "Meals"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    week_start_date: Mapped[date] = mapped_column(Date, nullable=False)
+    day_of_week: Mapped[int] = mapped_column(Integer, nullable=False)
+    meal_slot: Mapped[str] = mapped_column(String(10))
+    recipe_id: Mapped[int] = mapped_column(ForeignKey("Recipes.id"), nullable=False)
+
+    recipe: Mapped["Recipe"] = relationship(back_populates="meals")
+
+
 
 # creating the database tables
 Base.metadata.create_all(Engine)
