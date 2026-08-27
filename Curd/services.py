@@ -359,6 +359,7 @@ def addMealPlan(meal_data, user_id, db):
         day_of_week = meal_data.day_of_week,
         meal_slot = meal_data.meal_slot,
         recipe_id = recipe_id,
+        user_id = user_id
     )
 
     db.add(new_meal)
@@ -368,4 +369,28 @@ def addMealPlan(meal_data, user_id, db):
         "message": "Meal Added Successfully",
         "meal": new_meal,
         "meal_id": new_meal.id
+    }
+
+def getMeals(week_start, user_id, db):
+    existing_meals = db.query(MealPlan).filter(MealPlan.user_id == user_id, MealPlan.week_start_date == week_start ).all()
+    if not existing_meals:
+        raise HTTPException (status_code=404, detail="No Meals Found")
+
+    meal_recipes = []
+    for recipes in existing_meals:
+        recipe_id = recipes.recipe_id
+        recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
+        if recipe:
+            recipe_data = {
+                "week_start_date": recipes.week_start_date,
+                "day_of_week": recipes.day_of_week,
+                "meal_slot": recipes.meal_slot,
+                "recipeTitle": recipe.title,
+                "cook_time": recipe.cook_time,
+            }
+            meal_recipes.append(recipe_data)
+
+    return {
+        "recipe_details": meal_recipes,
+        "message": "Finding Successful",
     }

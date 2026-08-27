@@ -1,9 +1,11 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, File, Form, UploadFile
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import EmailStr
 from RecipenMealPlanner import Engine
 from sqlalchemy.orm import Session, sessionmaker
-from Curd.services import Login, Register, addMealPlan, createRecipe, deleteRecipe, favoriteRecipe, getFavorites, getRecipeDetails, getRecipes, getTags, getUserID, updateRecipe
+from Curd.services import Login, Register, addMealPlan, createRecipe, deleteRecipe, favoriteRecipe, getFavorites, getMeals, getRecipeDetails, getRecipes, getTags, getUserID, updateRecipe
 import jwt
 from Routers.pydanticModels import LoginSchema, MealPlannerSchema, RecipeCreateSchema, RegistratoinSchema
 import os
@@ -110,3 +112,8 @@ def get_tags(db: Session = Depends(get_db)):
 def add_meal_plan(meal_data: MealPlannerSchema, user_id: int = Depends(get_user_id), db: Session = Depends(get_db)):
     #
     return addMealPlan(meal_data, user_id, db)
+
+@router.get("/mealplan")
+def get_meals(week_start: date ,user_id: int = Depends(get_user_id), db: Session = Depends(get_db) ):
+    #
+    return getMeals(week_start, user_id, db)
