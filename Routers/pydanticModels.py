@@ -1,3 +1,4 @@
+from datetime import date
 from typing import List, Optional
 from pydantic import BaseModel, EmailStr
 
@@ -41,3 +42,9 @@ class RecipeBaseSchema(BaseModel):
 class RecipeCreateSchema(RecipeBaseSchema):
     ingredients: List[IngredientSchema]
     instructions: List[InstructionSchema]
+
+class MealPlannerSchema(BaseModel):
+    week_start_date: date
+    day_of_week: int
+    meal_slot: str
+    recipe_name: str
