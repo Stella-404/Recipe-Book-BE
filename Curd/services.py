@@ -350,7 +350,7 @@ def addMealPlan(meal_data, user_id, db):
     recipe = db.query(Recipe).filter(Recipe.user_id == user_id, Recipe.title == meal_data.recipe_name).first()
 
     if not recipe:
-        raise HTTPException(status_code=404, detail=f"{meal_data.recipe_name} not found! Please Create it first")
+        raise HTTPException(status_code=404, detail=f" '{meal_data.recipe_name}' recipe not found! Please Create it first")
     
     recipe_id = recipe.id
 
@@ -387,10 +387,24 @@ def getMeals(week_start, user_id, db):
                 "meal_slot": recipes.meal_slot,
                 "recipeTitle": recipe.title,
                 "cook_time": recipe.cook_time,
+                "recipe_id": recipe_id,
+                "id": recipes.id,
             }
             meal_recipes.append(recipe_data)
 
     return {
         "recipe_details": meal_recipes,
         "message": "Finding Successful",
+    }
+
+def deleteMeal(meal_id, user_id, db):
+    meal_tobe_deleted = db.query(MealPlan).filter(MealPlan.user_id == user_id, MealPlan.id == meal_id).first()
+    if not meal_tobe_deleted:
+        raise HTTPException(status_code=404, detail="Meal to be deleted not found")
+
+    db.delete(meal_tobe_deleted)
+    db.commit()
+    return{
+        "meal_id": meal_id,
+        "message": "Meal deleted successfully!"
     }

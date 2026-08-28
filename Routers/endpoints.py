@@ -5,7 +5,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import EmailStr
 from RecipenMealPlanner import Engine
 from sqlalchemy.orm import Session, sessionmaker
-from Curd.services import Login, Register, addMealPlan, createRecipe, deleteRecipe, favoriteRecipe, getFavorites, getMeals, getRecipeDetails, getRecipes, getTags, getUserID, updateRecipe
+from Curd.services import Login, Register, addMealPlan, createRecipe, deleteMeal, deleteRecipe, favoriteRecipe, getFavorites, getMeals, getRecipeDetails, getRecipes, getTags, getUserID, updateRecipe
 import jwt
 from Routers.pydanticModels import LoginSchema, MealPlannerSchema, RecipeCreateSchema, RegistratoinSchema
 import os
@@ -117,3 +117,8 @@ def add_meal_plan(meal_data: MealPlannerSchema, user_id: int = Depends(get_user_
 def get_meals(week_start: date ,user_id: int = Depends(get_user_id), db: Session = Depends(get_db) ):
     #
     return getMeals(week_start, user_id, db)
+
+@router.delete("/meals/{meal_id}")
+def delete_meal(meal_id: int, user_id: int = Depends(get_user_id), db: Session = Depends(get_db) ):
+    # 
+    return deleteMeal(meal_id, user_id, db)
