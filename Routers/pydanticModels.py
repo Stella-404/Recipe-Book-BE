@@ -48,3 +48,10 @@ class MealPlannerSchema(BaseModel):
     day_of_week: int
     meal_slot: str
     recipe_name: str
+
+class ShoppingList(BaseModel):
+    id: int
+    ing_name: str
+    total_quantity: float
+    unit: int
+    is_purchased: bool
