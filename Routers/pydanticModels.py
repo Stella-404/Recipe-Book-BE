@@ -53,5 +53,5 @@ class ShoppingList(BaseModel):
     id: int
     ing_name: str
     total_quantity: float
-    unit: int
+    unit: str
     is_purchased: bool
