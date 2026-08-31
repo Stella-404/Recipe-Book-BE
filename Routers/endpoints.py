@@ -1,6 +1,7 @@
 from datetime import date
+from typing import Optional
 
-from fastapi import APIRouter, Depends, File, Form, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import EmailStr
 from RecipenMealPlanner import Engine
@@ -60,9 +61,13 @@ async def create_recipe(title: str = Form(...),
     cook_time, servings, difficulty, tags_id, ingredients, instructions, image_path, user_id, db)
 
 @router.get("/recipes")
-def get_recipes(user_id: int = Depends(get_user_id), db : Session = Depends(get_db)):
+def get_recipes(user_id: int = Depends(get_user_id), 
+                search: Optional[str] = Query(None, description="Search term for recipe title"),
+                category: Optional[str] = Query(None, description="Filter by category"),
+                cuisine: Optional[str] = Query(None, description="Filter by cuisine"),
+                db : Session = Depends(get_db)):
     # 
-    return getRecipes(user_id, db)
+    return getRecipes(user_id, search, category, cuisine, db)
 
 @router.get("/recipes/{recipe_id}")
 def get_recipe_details(recipe_id: int, user_id: int = Depends(get_user_id), db: Session = Depends(get_db)):

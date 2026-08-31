@@ -162,10 +162,25 @@ async def createRecipe(title, description, cuisine, category, prep_time,
         "recipe_id": new_recipe.id
     }
 
-def getRecipes(user_id, db):
-    existing_recipe = db.query(Recipe).filter(Recipe.user_id == user_id).all()
+def getRecipes(user_id, search, category, cuisine, db):
+    # 1. Start with the base query filtered by user
+    query = db.query(Recipe).filter(Recipe.user_id == user_id)
 
-    if not existing_recipe:
+    # 2. Apply search filter if user typed something (ilike makes it case-insensitive)
+    if search and search.strip():
+        query = query.filter(Recipe.title.ilike(f"%{search.strip()}%"))
+
+    # 3. Apply category filter if it's selected and not "All"
+    if category and category != "All":
+        query = query.filter(Recipe.category == category)
+
+    # 4. Apply cuisine filter if it's selected and not "All"
+    if cuisine and cuisine != "All":
+        query = query.filter(Recipe.cuisine == cuisine)
+
+    existing_recipe = query.all()
+
+    if not existing_recipe and not (search or category or cuisine):
         raise HTTPException(status_code=404, detail="No recipes found!")
 
     fav_recipes = db.query(Favorite).filter(Favorite.user_id == user_id).all()
