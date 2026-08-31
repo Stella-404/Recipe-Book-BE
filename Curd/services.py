@@ -1,9 +1,10 @@
+from collections import defaultdict
 from datetime import datetime, timedelta
 import json
 import os
 
 from fastapi import HTTPException, security
-from RecipenMealPlanner import Favorite, Ingredient, Instruction, Recipe, Tag, Users, MealPlan
+from RecipenMealPlanner import Favorite, Ingredient, Instruction, Recipe, ShoppingListItem, Tag, Users, MealPlan
 import jwt
 
 security = security.HTTPBearer()
@@ -407,4 +408,54 @@ def deleteMeal(meal_id, user_id, db):
     return{
         "meal_id": meal_id,
         "message": "Meal deleted successfully!"
+    }
+
+def generateList(week_start_date, user_id, db):
+    meal_plans = db.query(MealPlan).filter(MealPlan.user_id == user_id, 
+                                            MealPlan.week_start_date == week_start_date).all()
+
+    if not meal_plans:
+        raise HTTPException(status_code=404, detail="No meal plans found for this week.")
+
+    aggregated = defaultdict(int)
+
+    for meal in meal_plans:
+        # adding relation, back to the recipe table bcz of
+        # recipe = relationship("Recipe") in the Meals table
+        recipe = meal.recipe
+        for ing in recipe.ingredients:
+                # Normalize name to avoid minor casing mismatches like "Tomato" vs "tomato"
+                key = (ing.name.strip().lower(), ing.unit.strip().lower())
+                aggregated[key] += ing.quantity
+
+    # Clearing the prev week's list from the table
+    db.query(ShoppingListItem).filter(ShoppingListItem.user_id==user_id,
+                                                        ShoppingListItem.week_start_date == week_start_date).delete()
+
+    new_items = []
+    for (name, unit), qty in aggregated.items():
+        item = ShoppingListItem(
+            user_id = user_id,
+            week_start_date = week_start_date,
+            ingredient_name = name,
+            total_quantity = qty,
+            unit = unit,
+            is_purchsed = False
+        )
+        db.add(item)
+        new_items.append(item)
+
+    db.commit()
+    # db.refresh(new_items)
+    return {
+        "message": "Shopping list generated successfully"
+    }
+
+def getShoppingList(week_start_date, user_id, db):
+    shopping_list = db.query(ShoppingListItem).filter(ShoppingListItem.user_id == user_id, 
+                                                        ShoppingListItem.week_start_date == week_start_date).all()
+
+    return{
+        "items": shopping_list,
+        "message": "Shopping List Displayed successfully"
     }

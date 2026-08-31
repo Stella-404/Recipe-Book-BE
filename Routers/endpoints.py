@@ -5,7 +5,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import EmailStr
 from RecipenMealPlanner import Engine
 from sqlalchemy.orm import Session, sessionmaker
-from Curd.services import Login, Register, addMealPlan, createRecipe, deleteMeal, deleteRecipe, favoriteRecipe, getFavorites, getMeals, getRecipeDetails, getRecipes, getTags, getUserID, updateRecipe
+from Curd.services import Login, Register, addMealPlan, createRecipe, deleteMeal, deleteRecipe, favoriteRecipe, getFavorites, generateList, getMeals, getRecipeDetails, getRecipes, getShoppingList, getTags, getUserID, updateRecipe
 import jwt
 from Routers.pydanticModels import LoginSchema, MealPlannerSchema, RecipeCreateSchema, RegistratoinSchema
 import os
@@ -122,3 +122,14 @@ def get_meals(week_start: date ,user_id: int = Depends(get_user_id), db: Session
 def delete_meal(meal_id: int, user_id: int = Depends(get_user_id), db: Session = Depends(get_db) ):
     # 
     return deleteMeal(meal_id, user_id, db)
+
+
+@router.post("/shoppinglist/{week_start_date}")
+def generate_list(week_start_date: date, user_id: int = Depends(get_user_id), db: Session = Depends(get_db) ):
+    # 
+    return generateList(week_start_date, user_id, db)
+
+@router.get("/fetchlist/{week_start_date}")
+def get_shopping_list(week_start_date: date, user_id: int = Depends(get_user_id), db: Session = Depends(get_db) ):
+    # 
+    return getShoppingList(week_start_date, user_id, db)
