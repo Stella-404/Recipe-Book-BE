@@ -5,9 +5,9 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import EmailStr
 from RecipenMealPlanner import Engine
 from sqlalchemy.orm import Session, sessionmaker
-from Curd.services import Login, Register, addMealPlan, createRecipe, deleteMeal, deleteRecipe, favoriteRecipe, getFavorites, generateList, getMeals, getRecipeDetails, getRecipes, getShoppingList, getTags, getUserID, updateRecipe
+from Curd.services import Login, Register, addMealPlan, createRecipe, deleteMeal, deleteRecipe, favoriteRecipe, getFavorites, generateList, getMeals, getRecipeDetails, getRecipes, getShoppingList, getTags, getUserID, handleDeleteChecked, handleToggle, updateRecipe
 import jwt
-from Routers.pydanticModels import LoginSchema, MealPlannerSchema, RecipeCreateSchema, RegistratoinSchema
+from Routers.pydanticModels import LoginSchema, MealPlannerSchema, RecipeCreateSchema, RegistratoinSchema, ShoppingList
 import os
 
 # creating the router instance
@@ -132,4 +132,14 @@ def generate_list(week_start_date: date, user_id: int = Depends(get_user_id), db
 @router.get("/fetchlist/{week_start_date}")
 def get_shopping_list(week_start_date: date, user_id: int = Depends(get_user_id), db: Session = Depends(get_db) ):
     # 
-    return getShoppingList(week_start_date, user_id, db)
+    return getShoppingList( week_start_date, user_id, db)
+
+@router.patch("/shoppinglist/{item_id}")
+def handle_toggle(item_id: int, db: Session = Depends(get_db) ):
+    # 
+    return handleToggle(item_id, db)
+
+@router.delete("/checkeditems/{week_start_date}")
+def handle_delete_checked(week_start_date: date, user_id: int = Depends(get_user_id), db: Session = Depends(get_db) ):
+    # 
+    return handleDeleteChecked(week_start_date, user_id, db)

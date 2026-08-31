@@ -430,28 +430,27 @@ def generateList(week_start_date, user_id, db):
 
     # Clearing the prev week's list from the table
     db.query(ShoppingListItem).filter(ShoppingListItem.user_id==user_id,
-                                                        ShoppingListItem.week_start_date == week_start_date).delete()
+                                    ShoppingListItem.week_start_date == week_start_date).delete()
 
     new_items = []
     for (name, unit), qty in aggregated.items():
         item = ShoppingListItem(
             user_id = user_id,
             week_start_date = week_start_date,
-            ingredient_name = name,
+            ing_name = name,
             total_quantity = qty,
             unit = unit,
-            is_purchsed = False
+            is_purchased = False
         )
         db.add(item)
         new_items.append(item)
 
     db.commit()
-    # db.refresh(new_items)
     return {
         "message": "Shopping list generated successfully"
     }
 
-def getShoppingList(week_start_date, user_id, db):
+def getShoppingList( week_start_date, user_id, db):
     shopping_list = db.query(ShoppingListItem).filter(ShoppingListItem.user_id == user_id, 
                                                         ShoppingListItem.week_start_date == week_start_date).all()
 
@@ -459,3 +458,24 @@ def getShoppingList(week_start_date, user_id, db):
         "items": shopping_list,
         "message": "Shopping List Displayed successfully"
     }
+
+def handleToggle(item_id, db):
+    item = db.query(ShoppingListItem).filter(ShoppingListItem.id == item_id).first()
+
+    if not item:
+        raise HTTPException(status_code=404, detail="Item Not Found :( ")
+
+    item.is_purchased = not item.is_purchased
+    db.commit()
+    return{
+        "is_purchased": item.is_purchased,
+        "id": item.id,
+        "message": "Patch Successful!"
+    }
+
+def handleDeleteChecked(week_start_date, user_id, db):
+    db.query(ShoppingListItem).filter(ShoppingListItem.user_id == user_id,
+                                        ShoppingListItem.week_start_date == week_start_date,
+                                        ShoppingListItem.is_purchased == True).delete()
+    db.commit()
+    return{"message": "Deleted Checked Items Successfully!"}
