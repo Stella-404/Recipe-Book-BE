@@ -125,10 +125,10 @@ class ShoppingListItem(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column (ForeignKey("Users.id", ondelete="CASCADE"), nullable=False)
     week_start_date: Mapped[date] = mapped_column(Date, nullable=False)
-    ingredient_name: Mapped[str] = mapped_column(String(200))
+    ing_name: Mapped[str] = mapped_column(String(200))
     total_quantity: Mapped[float] = mapped_column(Float, nullable=False)
     unit: Mapped[str] = mapped_column(String(50))
-    is_purchsed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_purchased: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     user = relationship("Users")
 
