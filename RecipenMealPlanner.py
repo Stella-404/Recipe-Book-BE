@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from sqlalchemy import Column, Date, DateTime, Float, ForeignKey, Integer, String, Table, Text, UniqueConstraint, create_engine, func
+from sqlalchemy import Boolean, Column, Date, DateTime, Float, ForeignKey, Integer, String, Table, Text, UniqueConstraint, create_engine, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
 Engine = create_engine("sqlite:///RecipenMealPlanner.db", echo=True)
@@ -17,15 +17,6 @@ class Users(Base):
 
 
 # PARENT MODEL FOR INSTRUCTION AND THE INGREDIENTS
-
-# ----------- Junction Table ------
-# recipe_tags = Table(
-#     "recipe_tags",
-#     Base.metadata,
-#     Column("recipe_id", Integer, ForeignKey("recipes.id", ondelete="CASCADE"), primary_key=True),
-#     Column("tag_id", Integer, ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True),
-#     )
-
 class Recipe(Base):
     __tablename__ = "Recipes"
 
@@ -128,7 +119,18 @@ class MealPlan(Base):
     recipe = relationship("Recipe")
     user = relationship("Users")
 
+class ShoppingListItem(Base):
+    __tablename__ = "ShoppingListItems"
 
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column (ForeignKey("Users.id", ondelete="CASCADE"), nullable=False)
+    week_start_date: Mapped[date] = mapped_column(Date, nullable=False)
+    ingredient_name: Mapped[str] = mapped_column(String(200))
+    total_quantity: Mapped[float] = mapped_column(Float, nullable=False)
+    unit: Mapped[str] = mapped_column(String(50))
+    is_purchsed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    user = relationship("Users")
 
 # creating the database tables
 Base.metadata.create_all(Engine)
